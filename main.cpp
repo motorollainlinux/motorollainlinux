@@ -13,10 +13,10 @@
 от карты владельцем. При вводе 3 неправильного пин-кода карта блокируется.*/
 
 //#include <iostream>
-#include <fstream>
+//#include <fstream>
 #include <stdio.h>
 #include <ctime>
-#include <locale.h>
+//#include <locale.h>
 //#include <map>
 
 using namespace std;
@@ -24,25 +24,74 @@ using namespace std;
 int UserID, UserBalance, UserPincode, UserChoice;
 char NextSumbol; 
 bool IsValidEnter = false;
+/*map <int, int> Cards;
+map <int, int> PinCodes;
+map <int, double> Balances;*/
+int Cards[10], PinCodes[10];
+double Balances[10];
 void Files()
 {
+    // открытие файлов
      FILE *UsersID, *UsersPincode, *UsersBalance, *UsersTransaction;
      UsersID = fopen("users_id.txt", "r");
      UsersPincode = fopen("pin-codes.txt", "r");
      UsersBalance = fopen("balances.txt", "wr");
-     UsersTransaction = fopen("logs.txt", "w");
+     // UsersTransaction = fopen("logs.txt", "w");
+     fscanf(UsersID, "%d", &UserID);
+     fscanf(UsersID, "%*[^/n]");
+     
+     // заполнеие массивов
+     for(int x = 0, y = 0, i = 0; i<=9; i++)
+    {
+         fscanf(UsersID, "%d",&x); 
+         fscanf(UsersID, "%d", &y);
+         Cards[x] = y;
+    }
+      for(int x = 0, y = 0, i = 0; i<=9; i++)
+    {
+         fscanf(UsersPincode, "%d",&x); 
+         fscanf(UsersPincode, "%d", &y);
+         PinCodes[x] = y;
+    }
+    int x = 0;
+      for(double y = 0.0, i = 0; i<=9; i++)
+    {
+         fscanf(UsersBalance, "%d", &x); 
+         fscanf(UsersBalance, "%lf", &y);
+         Balances[x] = y;
+    }
+     UserPincode = PinCodes[UserID];
+}
+void BalanceUpdate()
+{
+     FILE *UsersBalance;
+     UsersBalance = fopen("balances.txt", "wr");
+     int x = 0;
+      for(double y = 0.0, i = 0; i<=10; i++)
+    {
+         fscanf(UsersBalance, "%d",&x); 
+         fscanf(UsersBalance, "%lf", &y);
+         Balances[x] = y;
+    }
 }
 void CashOut()
 {
-     do{ printf("введие сумму, которую хотите вывети\n");
+     
+     do{ printf("введие сумму, которую хотите вывети (введие 0 для отменны)\n");
      if (scanf("%d%c", &UserChoice, &NextSumbol) != 2 ||
      NextSumbol != '\n')
+     { 
+         if (!UserChoice == 0)
      {
          printf("неверное значение, попробйте снова!\n");
          scanf("%*[^\n]");
+     } else 
+     {
+         printf("отмена...\n");
+         return;
+     }
      } else IsValidEnter = true;
      } while(!IsValidEnter);
-     
 }
 void Replenishment()
 {
@@ -62,7 +111,38 @@ void VievBalance()
 }
 int main()
 {
-
-     setlocale(LC_ALL, "Russian");
-     CashOut();  
+     Files();
+     int CountEnter = 0;
+     do{ printf("Здравствуйте! Введите ваш пин-код.\n");
+     if (scanf("%d%c", &UserChoice, &NextSumbol) != 2 ||
+     NextSumbol != '\n' || UserChoice != UserPincode)
+     { if (CountEnter != 3)
+     {
+         printf("неверное значение, попробйте снова!\n");
+         scanf("%*[^\n]");
+         CountEnter++;
+     } else return 0;
+     } else IsValidEnter = true;
+     } while(!IsValidEnter);
+     IsValidEnter = false;
+     do 
+     {
+         printf("сделайте свойвыбор:\n    0-снятие денег\n    1-поплнеие сщёта\n    2-перевод\n    3-оплатить мобильную связь\n    4-посмотреть баланс\n");
+         if (scanf("%d%c", &UserChoice, &NextSumbol) != 2 ||
+         NextSumbol != '\n' || UserChoice < 0 || UserChoice > 4)
+         {
+             printf("неверное значение, попробйте снова!\n");
+             scanf("%*[^\n]");
+         } else IsValidEnter = true;
+     } while(!IsValidEnter);
+          if (UserChoice == 0)
+     CashOut();
+     else if (UserChoice == 1)
+     Replenishment();
+     else if (UserChoice == 2)
+     PaymentOfMobileConection();
+     else if (UserChoice == 3)
+     Transfer();
+     else if (UserChoice == 4)
+     VievBalance();
 }
