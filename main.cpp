@@ -12,71 +12,83 @@
 операции. Предусмотреть возможность 2 раза ввести неправильный пин-код
 от карты владельцем. При вводе 3 неправильного пин-кода карта блокируется.*/
 
-//#include <iostream>
-//#include <fstream>
 #include <stdio.h>
 #include <ctime>
 //#include <locale.h>
-//#include <map>
+#include <map>
 
 using namespace std;
 
-int UserID, UserBalance, UserPincode, UserChoice;
+int UserID, UserBalance, UserPincode, UserChoice, TransferID, Function;
 char NextSumbol; 
 bool IsValidEnter = false;
-/*map <int, int> Cards;
+map <int, int> Cards;
 map <int, int> PinCodes;
-map <int, double> Balances;*/
-int Cards[10], PinCodes[10];
-double Balances[10];
+map <int, int> Balances;
+// технические функции
 void Files()
 {
     // открытие файлов
-     FILE *UsersID, *UsersPincode, *UsersBalance, *UsersTransaction;
+     FILE *UsersID, *UsersPincode, *UsersBalance;
      UsersID = fopen("users_id.txt", "r");
      UsersPincode = fopen("pin-codes.txt", "r");
-     UsersBalance = fopen("balances.txt", "wr");
+     UsersBalance = fopen("balances.txt", "r");
      // UsersTransaction = fopen("logs.txt", "w");
      fscanf(UsersID, "%d", &UserID);
      fscanf(UsersID, "%*[^/n]");
      
      // заполнеие массивов
-     for(int x = 0, y = 0, i = 0; i<=9; i++)
+     for(int x = 0, y = 0, i = 0; i<=10; i++)
     {
          fscanf(UsersID, "%d",&x); 
          fscanf(UsersID, "%d", &y);
          Cards[x] = y;
     }
-      for(int x = 0, y = 0, i = 0; i<=9; i++)
+      for(int x = 0, y = 0, i = 0; i<=10; i++)
     {
          fscanf(UsersPincode, "%d",&x); 
          fscanf(UsersPincode, "%d", &y);
          PinCodes[x] = y;
     }
-    int x = 0;
-      for(double y = 0.0, i = 0; i<=9; i++)
+       
+      for(int y = 0, x = 0, i = 0; i<=10; i++)
     {
          fscanf(UsersBalance, "%d", &x); 
-         fscanf(UsersBalance, "%lf", &y);
+         fscanf(UsersBalance, "%d", &y);
          Balances[x] = y;
     }
      UserPincode = PinCodes[UserID];
-}
+} 
+
 void BalanceUpdate()
 {
      FILE *UsersBalance;
-     UsersBalance = fopen("balances.txt", "wr");
-     int x = 0;
-      for(double y = 0.0, i = 0; i<=10; i++)
+     UsersBalance = fopen("balances.txt", "w");
+      
+      for (int y = 0, x = 0, i = 0; i<=10; i++)
     {
-         fscanf(UsersBalance, "%d",&x); 
-         fscanf(UsersBalance, "%lf", &y);
-         Balances[x] = y;
+         x = Balances[i];
+         y = Balances[i];
+         fprintf(UsersBalance, "%d ", x);
+         fprintf(UsersBalance, "%d\n", y);
     }
+     UserBalance = Balances[UserID];
 }
+void LogsWrite()
+{
+     string StrTime;
+     FILE *UsersTransaction;
+     UsersTransaction = fopen("logs.txt", "w");
+     time_t Time = time(nullptr);
+     char CTime[128];
+     strftime(CTime, sizeof(CTime), "%d.%m.%Y %X", localtime(&tm));
+     if (Function == 0)
+     fprintf(UsersTransaction, "%s||снято %dрублей с карты;ID карты:%d", CTime,UserChoice,UserID);
+}
+//функции банкомата
 void CashOut()
 {
-     
+      
      do{ printf("введие сумму, которую хотите вывети (введие 0 для отменны)\n");
      if (scanf("%d%c", &UserChoice, &NextSumbol) != 2 ||
      NextSumbol != '\n')
@@ -92,6 +104,12 @@ void CashOut()
      }
      } else IsValidEnter = true;
      } while(!IsValidEnter);
+     if (UserChoice >= UserBalance)
+     {
+         UserBalance -= UserChoice;
+         Balances[UserID] = UserBalance;
+         BalanceUpdate();
+     }
 }
 void Replenishment()
 {
@@ -112,6 +130,7 @@ void VievBalance()
 int main()
 {
      Files();
+     /**/ printf("%d\n",Balances[UserID]); /**/
      int CountEnter = 0;
      do{ printf("Здравствуйте! Введите ваш пин-код.\n");
      if (scanf("%d%c", &UserChoice, &NextSumbol) != 2 ||
