@@ -14,12 +14,11 @@
 
 #include <stdio.h>
 #include <ctime>
-//#include <locale.h>
 #include <map>
 
 using namespace std;
 
-int UserID, UserBalance, UserPincode, UserChoice, TransferID, Function;
+int UserID, UserBalance, UserPincode, UserChoice;
 char NextSumbol; 
 bool IsValidEnter = false;
 map <int, int> Cards;
@@ -58,6 +57,7 @@ void Files()
          Balances[x] = y;
     }
      UserPincode = PinCodes[UserID];
+     UserBalance = Balances[UserID];
 } 
 
 void BalanceUpdate()
@@ -65,25 +65,32 @@ void BalanceUpdate()
      FILE *UsersBalance;
      UsersBalance = fopen("balances.txt", "w");
       
-      for (int y = 0, x = 0, i = 0; i<=10; i++)
+      for (int y = 0, i = 27836; i<=27845; i++)
     {
-         x = Balances[i];
          y = Balances[i];
-         fprintf(UsersBalance, "%d ", x);
+         fprintf(UsersBalance, "%d ", i);
          fprintf(UsersBalance, "%d\n", y);
     }
      UserBalance = Balances[UserID];
 }
-void LogsWrite()
+void LogsWrite(int Function,int TransferID)
 {
      string StrTime;
      FILE *UsersTransaction;
-     UsersTransaction = fopen("logs.txt", "w");
+     UsersTransaction = fopen("logs.txt", "aw");
      time_t Time = time(nullptr);
+     tm* TimeNow = localtime(&Time);
      char CTime[128];
-     strftime(CTime, sizeof(CTime), "%d.%m.%Y %X", localtime(&tm));
-     if (Function == 0)
-     fprintf(UsersTransaction, "%s||снято %dрублей с карты;ID карты:%d", CTime,UserChoice,UserID);
+     strftime(CTime, sizeof(CTime), "%d.%m.%Y %X", TimeNow);
+          if (Function == 0)
+     fprintf(UsersTransaction, "%s||%d руб снято с карты; ID карты:%d", CTime, UserChoice, UserID);
+     else if (Function == 1)
+     fprintf(UsersTransaction, "%s||%d руб зачиленно на карту; ID карты:%d", CTime, UserChoice, UserID);
+     else if (Function == 2)
+     fprintf(UsersTransaction, "%s||оплачена мобильная связь с карты; ID карты:%d", CTime, UserID);
+     else if (Function == 3)
+     fprintf(UsersTransaction, "%s||%d руб снято с карты и зачисленно на карту:%d; ID карты:%d", CTime, UserChoice, TransferID, UserID);
+     else return;
 }
 //функции банкомата
 void CashOut()
@@ -104,20 +111,85 @@ void CashOut()
      }
      } else IsValidEnter = true;
      } while(!IsValidEnter);
-     if (UserChoice >= UserBalance)
+     if (UserChoice <= UserBalance)
      {
-         UserBalance -= UserChoice;
+         UserBalance = UserBalance - UserChoice;
          Balances[UserID] = UserBalance;
          BalanceUpdate();
+         LogsWrite(0,0);
      }
 }
 void Replenishment()
 {
-     printf("inWorck\n"); 
+     do{ printf("введие сумму, которую хотите внести (введие 0 для отменны)\n");
+     if (scanf("%d%c", &UserChoice, &NextSumbol) != 2 ||
+     NextSumbol != '\n')
+     { 
+         if (!UserChoice == 0)
+     {
+         printf("неверное значение, попробйте снова!\n");
+         scanf("%*[^\n]");
+     } else 
+     {
+         printf("отмена...\n");
+         return;
+     }
+     } else IsValidEnter = true;
+     } while(!IsValidEnter);
+     UserBalance = UserBalance + UserChoice;
+     Balances[UserID] = UserBalance;
+     BalanceUpdate();
+     LogsWrite(1,0);
 }
 void PaymentOfMobileConection()
 {
-     printf("inWorck\n");  
+     do{ printf("введие ID провайдера (введие 0 для отменны)\n    1-МТС\n    2-ТЕЛЕ2\n    3-Билайн\n    4-Ростелеком\n");
+     if (scanf("%d%c", &UserChoice, &NextSumbol) != 2 ||
+     NextSumbol != '\n' || UserChoice<0 || UserChoice>4)
+     { 
+         if (!UserChoice == 0)
+     {
+         printf("неверное значение, попробйте снова!\n");
+         scanf("%*[^\n]");
+     } else 
+     {
+         printf("отмена...\n");
+         return;
+     }
+     } else IsValidEnter = true;
+     /****/ if (UserChoice == 1) 
+     { if (UserBalance >= 850)
+        {          
+         UserBalance -= 850;
+         Balances[UserID] = UserBalance;
+         BalanceUpdate();
+        } else printf("недостаточно средств! тариф: 850 руб/мес\n");
+     } else if (UserChoice == 2)
+     {
+         if(UserBalance >= 400)
+         {
+             UserBalance -= 400;
+             Balances[UserID] = UserBalance;
+             BalanceUpdate();
+         } else printf("недостаточно средств! тариф: 400 руб/мес \n");
+     } else if (UserChoice == 3)
+     {
+         if (UserBalance >= 550)
+         {
+             UserBalance -= 550;
+             Balances[UserID] = UserBalance;
+             BalanceUpdate();
+         } else printf("недостаточно средств! тариф: 550 руб/мес\n");
+     } else if (UserChoice == 4)
+     {
+         if (UserBalance >= 750)
+         {
+             UserBalance -= 750;
+             Balances[UserID] = UserBalance;
+             BalanceUpdate();
+         } else printf("недостаточно средств! тариф: 750 руб/мес\n");
+     }
+     LogsWrite(2,0);
 }
 void Transfer()
 {
@@ -125,7 +197,7 @@ void Transfer()
 }
 void VievBalance()
 {
-     printf("inWorck\n"); 
+     printf("Ваш баланс:%d\n", UserBalance); 
 }
 int main()
 {
