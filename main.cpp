@@ -271,7 +271,7 @@ int main()
      { 
      
          printf("неверное значение, попробйте снова!\n");
-         printf("у вас осталось %d попыток\n", 3-CountEnter);
+         printf("у вас осталось %d попыток\n", 2-CountEnter);
          scanf("%*[^\n]");
          CountEnter++;
          if (CountEnter == 3)
